@@ -1,22 +1,24 @@
-# ---- Step 1: Build React app ----
-FROM node:20-alpine as builder
+# Base image
+FROM node:18
 
 # Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
 
-# Copy source code and build
+# Copy the rest of the code
 COPY . .
+
+# Build the React app
 RUN npm run build
 
-# ---- Step 2: Output Only Build Folder ----
-# This stage is optional if you're copying manually
-FROM alpine AS output
+# Install 'serve' to serve the production build
+RUN npm install -g serve
 
-WORKDIR /output
-COPY --from=builder /app/build .
+# Expose the port used by 'serve'
+EXPOSE 3000
 
-# No CMD needed — this is just a build artifact image
+# Serve the app
+CMD ["serve", "-s", "build", "-l", "3000"]
